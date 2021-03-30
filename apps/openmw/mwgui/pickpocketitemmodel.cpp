@@ -132,7 +132,7 @@ namespace MWGui
             return false;
         }
         else
-            player.getClass().skillUsageSucceeded(player, ESM::Skill::Sneak, 1);
+            player.getClass().skillUsageSucceeded(player, ESM::Skill::Security, 1);
 
         return true;
     }

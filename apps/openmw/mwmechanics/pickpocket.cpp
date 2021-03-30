@@ -22,10 +22,10 @@ namespace MWMechanics
     float Pickpocket::getChanceModifier(const MWWorld::Ptr &ptr, float add)
     {
         NpcStats& stats = ptr.getClass().getNpcStats(ptr);
-        float agility = stats.getAttribute(ESM::Attribute::Agility).getModified();
+        float intelligence = stats.getAttribute(ESM::Attribute::Intelligence).getModified();
         float luck = stats.getAttribute(ESM::Attribute::Luck).getModified();
-        float sneak = static_cast<float>(ptr.getClass().getSkill(ptr, ESM::Skill::Sneak));
-        return (add + 0.2f * agility + 0.1f * luck + sneak) * stats.getFatigueTerm();
+        float sneak = static_cast<float>(ptr.getClass().getSkill(ptr, ESM::Skill::Security));
+        return (add + 0.2f * intelligence + 0.1f * luck + sneak) * stats.getFatigueTerm();
     }
 
     bool Pickpocket::getDetected(float valueTerm)
@@ -35,7 +35,7 @@ namespace MWMechanics
 
         float t = 2*x - y;
 
-        float pcSneak = static_cast<float>(mThief.getClass().getSkill(mThief, ESM::Skill::Sneak));
+        float pcSneak = static_cast<float>(mThief.getClass().getSkill(mThief, ESM::Skill::Security));
         int iPickMinChance = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>()
                 .find("iPickMinChance")->mValue.getInteger();
         int iPickMaxChance = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>()
@@ -55,7 +55,10 @@ namespace MWMechanics
 
     bool Pickpocket::pick(MWWorld::Ptr item, int count)
     {
-        float stackValue = static_cast<float>(item.getClass().getValue(item) * count);
+        float stackValue = static_cast<float>(item.getClass().getWeight(item) * count);
+        if (mVictim.getClass().getInventoryStore(mVictim).isEquipped(item)) {
+            stackValue = stackValue + 50;
+        }
         float fPickPocketMod = MWBase::Environment::get().getWorld()->getStore().get<ESM::GameSetting>()
                 .find("fPickPocketMod")->mValue.getFloat();
         float valueTerm = 10 * fPickPocketMod * stackValue;
@@ -65,7 +68,7 @@ namespace MWMechanics
 
     bool Pickpocket::finish()
     {
-        return getDetected(0.f);
+        return false;
     }
 
 }
