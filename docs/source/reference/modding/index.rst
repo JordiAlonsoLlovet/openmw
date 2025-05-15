@@ -20,8 +20,17 @@ about creating new content for OpenMW, please refer to
 	foreword
 	differences
 	mod-install
+	openmw-game-template
 	settings/index
 	texture-modding/index
+	custom-models/index
 	font
+	sound-effects
+	music
+	sky-system
+	doors-and-teleports
+	custom-shader-effects
 	extended
+	animation-blending
 	paths
+	localisation

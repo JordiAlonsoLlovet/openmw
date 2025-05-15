@@ -1,13 +1,10 @@
 #ifndef WINDOWS_CRASHCATCHER_HPP
 #define WINDOWS_CRASHCATCHER_HPP
 
-#include <string>
-
-#undef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include <filesystem>
 
 #include <components/crashcatcher/crashcatcher.hpp>
+#include <components/misc/windows.hpp>
 
 namespace Crash
 {
@@ -24,18 +21,24 @@ namespace Crash
     // the main openmw process in task manager.
 
     static constexpr const int CrashCatcherTimeout = 2500;
+    static constexpr const int CrashCatcherThawTimeout = 250;
 
     struct CrashSHM;
 
     class CrashCatcher final
     {
     public:
+        static CrashCatcher* instance() { return sInstance; }
 
-        CrashCatcher(int argc, char **argv, const std::string& crashLogPath);
+        CrashCatcher(int argc, char** argv, const std::filesystem::path& dumpPath,
+            const std::filesystem::path& crashDumpName, const std::filesystem::path& freezeDumpName);
         ~CrashCatcher();
 
-    private:
+        void updateDumpPath(const std::filesystem::path& dumpPath);
 
+        void updateDumpNames(const std::filesystem::path& crashDumpName, const std::filesystem::path& freezeDumpName);
+
+    private:
         static CrashCatcher* sInstance;
 
         //  mapped SHM area
@@ -59,7 +62,8 @@ namespace Crash
 
         void shmUnlock();
 
-        void startMonitorProcess(const std::string& crashLogPath);
+        void startMonitorProcess(const std::filesystem::path& dumpPath, const std::filesystem::path& crashDumpName,
+            const std::filesystem::path& freezeDumpName);
 
         void waitMonitor();
 
@@ -70,7 +74,6 @@ namespace Crash
         void handleVectoredException(PEXCEPTION_POINTERS info);
 
     public:
-
         static LONG WINAPI vectoredExceptionHandler(PEXCEPTION_POINTERS info);
     };
 

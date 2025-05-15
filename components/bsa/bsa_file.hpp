@@ -25,122 +25,132 @@
 #define BSA_BSA_FILE_H
 
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
-#include <map>
 
-#include <components/misc/stringops.hpp>
-
-#include <components/files/constrainedfilestream.hpp>
-
+#include <components/files/conversion.hpp>
+#include <components/files/istreamptr.hpp>
 
 namespace Bsa
 {
 
-/**
-   This class is used to read "Bethesda Archive Files", or BSAs.
- */
-class BSAFile
-{
-public:
-    /// Represents one file entry in the archive
-    struct FileStruct
+    enum class BsaVersion : std::uint32_t
     {
-        // File size and offset in file. We store the offset from the
-        // beginning of the file, not the offset into the data buffer
-        // (which is what is stored in the archive.)
-        uint32_t fileSize, offset;
-
-        // Zero-terminated file name
-        const char *name;
-    };
-    typedef std::vector<FileStruct> FileList;
-
-protected:
-    /// Table of files in this archive
-    FileList mFiles;
-
-    /// Filename string buffer
-    std::vector<char> mStringBuf;
-
-    /// True when an archive has been loaded
-    bool mIsLoaded;
-
-    /// Used for error messages
-    std::string mFilename;
-
-    /// Case insensitive string comparison
-    struct iltstr
-    {
-        bool operator()(const char *s1, const char *s2) const
-        { return Misc::StringUtils::ciLess(s1, s2); }
+        Unknown = 0x0,
+        Uncompressed = 0x100,
+        Compressed = 0x415342, // B, S, A,
+        BA2GNRL, // used by FO4, BSA which contains files
+        BA2DX10 // used by FO4, BSA which contains textures
     };
 
-    /** A map used for fast file name lookup. The value is the index into
-        the files[] vector above. The iltstr ensures that file name
-        checks are case insensitive.
-    */
-    typedef std::map<const char*, int, iltstr> Lookup;
-    Lookup mLookup;
-
-    /// Error handling
-    void fail(const std::string &msg);
-
-    /// Read header information from the input source
-    virtual void readHeader();
-
-    /// Read header information from the input source
-
-
-    /// Get the index of a given file name, or -1 if not found
-    /// @note Thread safe.
-    int getIndex(const char *str) const;
-
-public:
-    /* -----------------------------------
-     * BSA management methods
-     * -----------------------------------
+    /**
+       This class is used to read "Bethesda Archive Files", or BSAs.
      */
-
-    BSAFile()
-      : mIsLoaded(false)
-    { }
-
-    virtual ~BSAFile() = default;
-
-    /// Open an archive file.
-    void open(const std::string &file);
-
-    /* -----------------------------------
-     * Archive file routines
-     * -----------------------------------
-     */
-
-    /// Check if a file exists
-    virtual bool exists(const char *file) const
-    { return getIndex(file) != -1; }
-
-    /** Open a file contained in the archive. Throws an exception if the
-        file doesn't exist.
-     * @note Thread safe.
-    */
-    virtual Files::IStreamPtr getFile(const char *file);
-
-    /** Open a file contained in the archive.
-     * @note Thread safe.
-    */
-    virtual Files::IStreamPtr getFile(const FileStruct* file);
-
-    /// Get a list of all files
-    /// @note Thread safe.
-    const FileList &getList() const
-    { return mFiles; }
-
-    const std::string& getFilename() const
+    class BSAFile
     {
-        return mFilename;
-    }
-};
+    public:
+#pragma pack(push)
+#pragma pack(1)
+        struct Hash
+        {
+            uint32_t low, high;
+        };
+#pragma pack(pop)
+
+        /// Represents one file entry in the archive
+        struct FileStruct
+        {
+            void setNameInfos(size_t index, std::vector<char>* stringBuf)
+            {
+                namesOffset = static_cast<uint32_t>(index);
+                namesBuffer = stringBuf;
+            }
+
+            // File size and offset in file. We store the offset from the
+            // beginning of the file, not the offset into the data buffer
+            // (which is what is stored in the archive.)
+            uint32_t fileSize, offset;
+            Hash hash;
+
+            // Zero-terminated file name
+            const char* name() const { return &(*namesBuffer)[namesOffset]; }
+
+            uint32_t namesOffset = 0;
+            std::vector<char>* namesBuffer = nullptr;
+        };
+        typedef std::vector<FileStruct> FileList;
+
+    protected:
+        bool mHasChanged = false;
+
+        /// Table of files in this archive
+        FileList mFiles;
+
+        /// Filename string buffer
+        std::vector<char> mStringBuf;
+
+        /// True when an archive has been loaded
+        bool mIsLoaded;
+
+        /// Used for error messages
+        std::filesystem::path mFilepath;
+
+        /// Error handling
+        [[noreturn]] void fail(const std::string& msg) const;
+
+        /// Read header information from the input source
+        virtual void readHeader();
+        virtual void writeHeader();
+
+    public:
+        /* -----------------------------------
+         * BSA management methods
+         * -----------------------------------
+         */
+
+        BSAFile()
+            : mIsLoaded(false)
+        {
+        }
+
+        virtual ~BSAFile()
+        {
+            close();
+        }
+
+        /// Open an archive file.
+        void open(const std::filesystem::path& file);
+
+        void close();
+
+        /* -----------------------------------
+         * Archive file routines
+         * -----------------------------------
+         */
+
+        /** Open a file contained in the archive.
+         * @note Thread safe.
+         */
+        Files::IStreamPtr getFile(const FileStruct* file);
+
+        void addFile(const std::string& filename, std::istream& file);
+
+        /// Get a list of all files
+        /// @note Thread safe.
+        const FileList& getList() const
+        {
+            return mFiles;
+        }
+
+        std::string getFilename() const
+        {
+            return Files::pathToUnicodeString(mFilepath);
+        }
+
+        // checks version of BSA from file header
+        static BsaVersion detectVersion(const std::filesystem::path& filePath);
+    };
 
 }
 

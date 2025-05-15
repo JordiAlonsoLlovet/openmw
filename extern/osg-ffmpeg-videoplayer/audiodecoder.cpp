@@ -1,15 +1,28 @@
 #include "audiodecoder.hpp"
 
+#include <extern/osg-ffmpeg-videoplayer/libavutildefines.hpp>
+
 #include <algorithm>
 #include <stdexcept>
 #include <string>
 
+#if defined(_MSC_VER)
+    #pragma warning (push)
+    #pragma warning (disable : 4244)
+#endif
+
 extern "C"
 {
-    #include <libavcodec/avcodec.h>
-
     #include <libswresample/swresample.h>
 }
+
+#if defined(_MSC_VER)
+    #pragma warning (pop)
+#endif
+
+#if OPENMW_FFMPEG_5_OR_GREATER
+    #include <libavutil/channel_layout.h>
+#endif
 
 #include "videostate.hpp"
 
@@ -46,7 +59,11 @@ MovieAudioDecoder::MovieAudioDecoder(VideoState* videoState)
     : mVideoState(videoState)
     , mAVStream(*videoState->audio_st)
     , mOutputSampleFormat(AV_SAMPLE_FMT_NONE)
+    #if OPENMW_FFMPEG_5_OR_GREATER
+    , mOutputChannelLayout({})
+    #else
     , mOutputChannelLayout(0)
+    #endif
     , mOutputSampleRate(0)
     , mFramePos(0)
     , mFrameSize(0)
@@ -64,7 +81,7 @@ MovieAudioDecoder::MovieAudioDecoder(VideoState* videoState)
 {
     mAudioResampler.reset(new AudioResampler());
 
-    AVCodec *codec = avcodec_find_decoder(mAVStream->codecpar->codec_id);
+    const AVCodec *codec = avcodec_find_decoder(mAVStream->codecpar->codec_id);
     if(!codec)
     {
         std::string ss = "No codec found for id " +
@@ -102,21 +119,49 @@ void MovieAudioDecoder::setupFormat()
 
     AVSampleFormat inputSampleFormat = mAudioContext->sample_fmt;
 
+#if OPENMW_FFMPEG_5_OR_GREATER
+    AVChannelLayout inputChannelLayout = mAudioContext->ch_layout;
+    if (inputChannelLayout.u.mask != 0)
+        mOutputChannelLayout = inputChannelLayout;
+    else
+        av_channel_layout_default(&mOutputChannelLayout, mAudioContext->ch_layout.nb_channels);
+#else
     uint64_t inputChannelLayout = mAudioContext->channel_layout;
     if (inputChannelLayout == 0)
         inputChannelLayout = av_get_default_channel_layout(mAudioContext->channels);
+#endif
 
     int inputSampleRate = mAudioContext->sample_rate;
 
     mOutputSampleRate = inputSampleRate;
     mOutputSampleFormat = inputSampleFormat;
+
+#if OPENMW_FFMPEG_5_OR_GREATER
+    adjustAudioSettings(mOutputSampleFormat, mOutputChannelLayout.u.mask, mOutputSampleRate);
+#else
     mOutputChannelLayout = inputChannelLayout;
     adjustAudioSettings(mOutputSampleFormat, mOutputChannelLayout, mOutputSampleRate);
+#endif
 
     if (inputSampleFormat != mOutputSampleFormat
+        #if OPENMW_FFMPEG_5_OR_GREATER
+            || inputChannelLayout.u.mask != mOutputChannelLayout.u.mask
+        #else
             || inputChannelLayout != mOutputChannelLayout
+        #endif
             || inputSampleRate != mOutputSampleRate)
     {
+    #if OPENMW_FFMPEG_5_OR_GREATER
+        swr_alloc_set_opts2(&mAudioResampler->mSwr,
+          &mOutputChannelLayout,
+          mOutputSampleFormat,
+          mOutputSampleRate,
+          &inputChannelLayout,
+          inputSampleFormat,
+          inputSampleRate,
+          0,                             // logging level offset
+          nullptr);                      // log context
+    #else
         mAudioResampler->mSwr = swr_alloc_set_opts(mAudioResampler->mSwr,
                           mOutputChannelLayout,
                           mOutputSampleFormat,
@@ -126,6 +171,8 @@ void MovieAudioDecoder::setupFormat()
                           inputSampleRate,
                           0,                             // logging level offset
                           nullptr);                      // log context
+    #endif
+
         if(!mAudioResampler->mSwr)
             fail(std::string("Couldn't allocate SwrContext"));
         if(swr_init(mAudioResampler->mSwr) < 0)
@@ -151,7 +198,11 @@ int MovieAudioDecoder::synchronize_audio()
         if(fabs(avg_diff) >= mAudioDiffThreshold)
         {
             int n = av_get_bytes_per_sample(mOutputSampleFormat) *
+        #if OPENMW_FFMPEG_5_OR_GREATER
+                    mOutputChannelLayout.nb_channels;
+        #else
                     av_get_channel_layout_nb_channels(mOutputChannelLayout);
+        #endif
             sample_skip = ((int)(diff * mAudioContext->sample_rate) * n);
         }
     }
@@ -197,7 +248,11 @@ int MovieAudioDecoder::audio_decode_frame(AVFrame *frame, int &sample_skip)
                 if(!mDataBuf || mDataBufLen < frame->nb_samples)
                 {
                     av_freep(&mDataBuf);
+    #if OPENMW_FFMPEG_5_OR_GREATER
+                    if(av_samples_alloc(&mDataBuf, nullptr, mOutputChannelLayout.nb_channels,
+    #else
                     if(av_samples_alloc(&mDataBuf, nullptr, av_get_channel_layout_nb_channels(mOutputChannelLayout),
+    #endif
                                         frame->nb_samples, mOutputSampleFormat, 0) < 0)
                         break;
                     else
@@ -214,7 +269,11 @@ int MovieAudioDecoder::audio_decode_frame(AVFrame *frame, int &sample_skip)
             else
                 mFrameData = &frame->data[0];
 
+    #if OPENMW_FFMPEG_5_OR_GREATER
+            int result = frame->nb_samples * mOutputChannelLayout.nb_channels *
+    #else
             int result = frame->nb_samples * av_get_channel_layout_nb_channels(mOutputChannelLayout) *
+    #endif
                     av_get_bytes_per_sample(mOutputSampleFormat);
 
             /* We have data, return it and come back for more later */
@@ -255,7 +314,7 @@ size_t MovieAudioDecoder::read(char *stream, size_t len)
         size_t sampleSize = av_get_bytes_per_sample(mOutputSampleFormat);
         char* data[1];
         data[0] = stream;
-        av_samples_set_silence((uint8_t**)data, 0, len/sampleSize, 1, mOutputSampleFormat);
+        av_samples_set_silence((uint8_t**)data, 0, static_cast<int>(len/sampleSize), 1, mOutputSampleFormat);
         return len;
     }
 
@@ -276,7 +335,7 @@ size_t MovieAudioDecoder::read(char *stream, size_t len)
 
             mFramePos = std::min<ssize_t>(mFrameSize, sample_skip);
             if(sample_skip > 0 || mFrameSize > -sample_skip)
-                sample_skip -= mFramePos;
+                sample_skip -= static_cast<int>(mFramePos);
             continue;
         }
 
@@ -291,7 +350,11 @@ size_t MovieAudioDecoder::read(char *stream, size_t len)
             len1 = std::min<size_t>(len1, -mFramePos);
 
             int n = av_get_bytes_per_sample(mOutputSampleFormat)
+    #if OPENMW_FFMPEG_5_OR_GREATER
+                    * mOutputChannelLayout.nb_channels;
+    #else
                     * av_get_channel_layout_nb_channels(mOutputChannelLayout);
+    #endif
 
             /* add samples by copying the first sample*/
             if(n == 1)
@@ -341,7 +404,11 @@ int MovieAudioDecoder::getOutputSampleRate() const
 
 uint64_t MovieAudioDecoder::getOutputChannelLayout() const
 {
+    #if OPENMW_FFMPEG_5_OR_GREATER
+    return mOutputChannelLayout.u.mask;
+    #else
     return mOutputChannelLayout;
+    #endif
 }
 
 AVSampleFormat MovieAudioDecoder::getOutputSampleFormat() const

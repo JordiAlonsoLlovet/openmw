@@ -1,8 +1,8 @@
 #ifndef MWINPUT_MWMOUSEMANAGER_H
 #define MWINPUT_MWMOUSEMANAGER_H
 
-#include <components/settings/settings.hpp>
 #include <components/sdlutil/events.hpp>
+#include <components/settings/settings.hpp>
 
 namespace SDLUtil
 {
@@ -23,12 +23,10 @@ namespace MWInput
         void updateCursorMode();
         void update(float dt);
 
-        void mouseMoved(const SDLUtil::MouseMotionEvent &arg) override;
-        void mousePressed(const SDL_MouseButtonEvent &arg, Uint8 id) override;
-        void mouseReleased(const SDL_MouseButtonEvent &arg, Uint8 id) override;
-        void mouseWheelMoved(const SDL_MouseWheelEvent &arg) override;
-
-        void processChangedSettings(const Settings::CategorySettingVector& changed);
+        void mouseMoved(const SDLUtil::MouseMotionEvent& arg) override;
+        void mousePressed(const SDL_MouseButtonEvent& arg, Uint8 id) override;
+        void mouseReleased(const SDL_MouseButtonEvent& arg, Uint8 id) override;
+        void mouseWheelMoved(const SDL_MouseWheelEvent& arg) override;
 
         bool injectMouseButtonPress(Uint8 button);
         bool injectMouseButtonRelease(Uint8 button);
@@ -38,22 +36,21 @@ namespace MWInput
         void setMouseLookEnabled(bool enabled) { mMouseLookEnabled = enabled; }
         void setGuiCursorEnabled(bool enabled) { mGuiCursorEnabled = enabled; }
 
-    private:
-        bool mInvertX;
-        bool mInvertY;
-        bool mGrabCursor;
-        float mCameraSensitivity;
-        float mCameraYMultiplier;
+        int getMouseMoveX() const { return mMouseMoveX; }
+        int getMouseMoveY() const { return mMouseMoveY; }
 
+    private:
         BindingsManager* mBindingsManager;
         SDLUtil::InputWrapper* mInputWrapper;
-        float mInvUiScalingFactor;
 
         float mGuiCursorX;
         float mGuiCursorY;
         int mMouseWheel;
         bool mMouseLookEnabled;
         bool mGuiCursorEnabled;
+
+        int mMouseMoveX;
+        int mMouseMoveY;
     };
 }
 #endif

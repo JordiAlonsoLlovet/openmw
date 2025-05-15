@@ -28,13 +28,8 @@ A `Launchpad PPA <https://launchpad.net/~openmw/+archive/openmw>`_ is available.
 Add it and install OpenMW::
 
 	$ sudo add-apt-repository ppa:openmw/openmw
-	$ sudo apt-get update
-	$ sudo apt-get install openmw openmw-launcher
-
-.. note::
-	OpenMW-CS must be installed separately by typing::
-
-		$ sudo apt-get install openmw-cs
+	$ sudo apt update
+	$ sudo apt install openmw
 
 The Arch Linux Way
 ==================
@@ -61,3 +56,10 @@ However, it depends on several packages which are not in stable,
 so it is not possible to install OpenMW in Wheezy without creating a FrankenDebian.
 This is not recommended or supported.
 
+The Flatpak Way
+===============
+
+OpenMW is available as a flatpak. With flatpak installed, run the command below. It should show up on your desktop.
+::
+
+	# flatpak install openmw

@@ -8,14 +8,14 @@ namespace CSVRender
     /// @note See the respective file in OpenMW (apps/openmw/mwrender/vismask.hpp)
     /// for general usage hints about node masks.
     /// @copydoc MWRender::VisMask
-    enum Mask
+    enum Mask : unsigned int
     {
         // elements that are part of the actual scene
-        Mask_Reference = 0x2,
-        Mask_Pathgrid = 0x4,
-        Mask_Water = 0x8,
-        Mask_Fog = 0x10,
-        Mask_Terrain = 0x20,
+        Mask_Hidden = 0x0,
+        Mask_Reference = 0x1,
+        Mask_Pathgrid = 0x2,
+        Mask_Water = 0x4,
+        Mask_Terrain = 0x8,
 
         // used within models
         Mask_ParticleSystem = 0x100,

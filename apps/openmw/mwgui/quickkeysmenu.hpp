@@ -1,17 +1,18 @@
 #ifndef MWGUI_QUICKKEYS_H
 #define MWGUI_QUICKKEYS_H
 
-#include "../mwworld/ptr.hpp"
+#include <memory>
 
-#include "windowbase.hpp"
+#include "components/esm3/quickkeys.hpp"
 
+#include "itemselection.hpp"
 #include "spellmodel.hpp"
+#include "windowbase.hpp"
 
 namespace MWGui
 {
 
     class QuickKeysMenuAssign;
-    class ItemSelectionDialog;
     class MagicSelectionDialog;
     class ItemWidget;
     class SpellView;
@@ -20,7 +21,6 @@ namespace MWGui
     {
     public:
         QuickKeysMenu();
-        ~QuickKeysMenu();
 
         void onResChange(int, int) override { center(); }
 
@@ -29,40 +29,31 @@ namespace MWGui
         void onUnassignButtonClicked(MyGUI::Widget* sender);
         void onCancelButtonClicked(MyGUI::Widget* sender);
 
-        void onAssignItem (MWWorld::Ptr item);
-        void onAssignItemCancel ();
-        void onAssignMagicItem (MWWorld::Ptr item);
-        void onAssignMagic (const std::string& spellId);
-        void onAssignMagicCancel ();
+        void onAssignItem(MWWorld::Ptr item);
+        void onAssignItemCancel();
+        void onAssignMagicItem(MWWorld::Ptr item);
+        void onAssignMagic(const ESM::RefId& spellId);
+        void onAssignMagicCancel();
         void onOpen() override;
+        void onClose() override;
 
         void activateQuickKey(int index);
         void updateActivatedQuickKey();
 
-        /// @note This enum is serialized, so don't move the items around!
-        enum QuickKeyType
-        {
-            Type_Item,
-            Type_Magic,
-            Type_MagicItem,
-            Type_Unassigned,
-            Type_HandToHand
-        };
-
-        void write (ESM::ESMWriter& writer);
-        void readRecord (ESM::ESMReader& reader, uint32_t type);
+        void write(ESM::ESMWriter& writer);
+        void readRecord(ESM::ESMReader& reader, uint32_t type);
         void clear() override;
 
+        std::string_view getWindowIdForLua() const override { return "QuickKeys"; }
 
     private:
-
-        struct keyData {
-            int index;
-            ItemWidget* button;
-            QuickKeysMenu::QuickKeyType type;
-            std::string id;
+        struct keyData
+        {
+            int index = -1;
+            ItemWidget* button = nullptr;
+            ESM::QuickKeys::Type type = ESM::QuickKeys::Type::Unassigned;
+            ESM::RefId id;
             std::string name;
-            keyData(): index(-1), button(nullptr), type(Type_Unassigned), id(""), name("") {}
         };
 
         std::vector<keyData> mKey;
@@ -72,13 +63,14 @@ namespace MWGui
         MyGUI::EditBox* mInstructionLabel;
         MyGUI::Button* mOkButton;
 
-        QuickKeysMenuAssign* mAssignDialog;
-        ItemSelectionDialog* mItemSelectionDialog;
-        MagicSelectionDialog* mMagicSelectionDialog;
+        std::unique_ptr<QuickKeysMenuAssign> mAssignDialog;
+        std::unique_ptr<ItemSelectionDialog> mItemSelectionDialog;
+        std::unique_ptr<MagicSelectionDialog> mMagicSelectionDialog;
 
         void onQuickKeyButtonClicked(MyGUI::Widget* sender);
         void onOkButtonClicked(MyGUI::Widget* sender);
-
+        // Check if quick key is still valid
+        inline void validate(int index);
         void unassign(keyData* key);
     };
 
@@ -111,10 +103,9 @@ namespace MWGui
 
         QuickKeysMenu* mParent;
 
-        void onCancelButtonClicked (MyGUI::Widget* sender);
+        void onCancelButtonClicked(MyGUI::Widget* sender);
         void onModelIndexSelected(SpellModel::ModelIndex index);
     };
 }
-
 
 #endif

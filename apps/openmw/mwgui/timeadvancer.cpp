@@ -3,12 +3,12 @@
 namespace MWGui
 {
     TimeAdvancer::TimeAdvancer(float delay)
-        : mRunning(false),
-          mCurHour(0),
-          mHours(1),
-          mInterruptAt(-1),
-          mDelay(delay),
-          mRemainingTime(delay)
+        : mRunning(false)
+        , mCurHour(0)
+        , mHours(1)
+        , mInterruptAt(-1)
+        , mDelay(delay)
+        , mRemainingTime(delay)
     {
     }
 
@@ -54,16 +54,15 @@ namespace MWGui
                 eventFinished();
                 return;
             }
-
         }
     }
 
-    int TimeAdvancer::getHours()
+    int TimeAdvancer::getHours() const
     {
         return mHours;
     }
 
-    bool TimeAdvancer::isRunning()
+    bool TimeAdvancer::isRunning() const
     {
         return mRunning;
     }

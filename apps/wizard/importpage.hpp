@@ -1,8 +1,6 @@
 #ifndef IMPORTPAGE_HPP
 #define IMPORTPAGE_HPP
 
-#include <QWizardPage>
-
 #include "ui_importpage.h"
 
 namespace Wizard
@@ -13,13 +11,12 @@ namespace Wizard
     {
         Q_OBJECT
     public:
-        ImportPage(QWidget *parent);
+        ImportPage(QWidget* parent);
 
         int nextId() const override;
 
     private:
-        MainWizard *mWizard;
-
+        MainWizard* mWizard;
     };
 
 }

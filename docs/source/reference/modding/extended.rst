@@ -276,6 +276,14 @@ Also it is possible to add a "Bip01 Arrow" bone to actor skeletons. In this case
 Such approach allows to implement better shooting animations (for example, beast races have tail, so quivers should be attached under different angle and
 default arrow fetching animation does not look good).
 
+Animation blending
+------------------
+
+Animation blending introduces smooth animation transitions between essentially every animation in the game without affecting gameplay. Effective if ``smooth animation transitions`` setting is enabled in the launcher or the config files.
+
+Animation developers can bundle ``.yaml``/``.json`` files together with their ``.kf`` files to specify the blending style of their animations. Those settings will only affect the corresponding animation files. 
+For more details see :doc:`animation-blending`.
+
 Groundcover support
 -------------------
 
@@ -326,6 +334,16 @@ Also groundcover detection should be enabled via settings.cfg:
 
     [Groundcover]
     enabled = true
+
+Lua scripting
+-------------
+
+OpenMW supports Lua scripts. See :ref:`Lua scripting documentation <OpenMW Lua scripting>`.
+It is not compatible with MWSE. A mod with Lua scripts will work only if it was developed specifically for OpenMW.
+
+Installation of a Lua mod is the same as of any other mod: add ``data=`` and ``content=`` entries to ``openmw.cfg``.
+Files with suffix ``.omwscripts`` are special type of content files and should also be enabled using ``content=`` entries.
+Note that for some mods load order can be important.
 
 .. _`Graphic Herbalism`: https://www.nexusmods.com/morrowind/mods/46599
 .. _`OpenMW Containers Animated`: https://www.nexusmods.com/morrowind/mods/46232

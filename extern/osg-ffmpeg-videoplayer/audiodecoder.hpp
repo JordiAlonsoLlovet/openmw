@@ -6,6 +6,13 @@
 #include <new>
 #include <memory>
 
+#include <extern/osg-ffmpeg-videoplayer/libavutildefines.hpp>
+
+#if defined(_MSC_VER)
+    #pragma warning (push)
+    #pragma warning (disable : 4244)
+#endif
+
 extern "C"
 {
     #include <libavutil/avutil.h>
@@ -13,6 +20,10 @@ extern "C"
     #include <libavformat/avformat.h>
     #include <libavutil/channel_layout.h>
 }
+
+#if defined(_MSC_VER)
+    #pragma warning (pop)
+#endif
 
 #if defined(_WIN32) && !defined(__MINGW32__)
 #include <basetsd.h>
@@ -34,7 +45,11 @@ protected:
     AVCodecContext* mAudioContext;
     AVStream *mAVStream;
     enum AVSampleFormat mOutputSampleFormat;
+    #if OPENMW_FFMPEG_5_OR_GREATER
+    AVChannelLayout mOutputChannelLayout;
+    #else
     uint64_t mOutputChannelLayout;
+    #endif
     int mOutputSampleRate;
     ssize_t mFramePos;
     ssize_t mFrameSize;

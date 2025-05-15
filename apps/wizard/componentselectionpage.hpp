@@ -1,8 +1,6 @@
 #ifndef COMPONENTSELECTIONPAGE_HPP
 #define COMPONENTSELECTIONPAGE_HPP
 
-#include <QWizardPage>
-
 #include "ui_componentselectionpage.h"
 
 namespace Wizard
@@ -13,20 +11,19 @@ namespace Wizard
     {
         Q_OBJECT
     public:
-        ComponentSelectionPage(QWidget *parent);
+        ComponentSelectionPage(QWidget* parent);
 
         int nextId() const override;
         bool validatePage() override;
 
     private slots:
-        void updateButton(QListWidgetItem *item);
+        void updateButton(QListWidgetItem* item);
 
     private:
-        MainWizard *mWizard;
+        MainWizard* mWizard;
 
     protected:
         void initializePage() override;
-
     };
 
 }

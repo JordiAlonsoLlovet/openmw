@@ -1,9 +1,9 @@
 #ifndef INTROPAGE_HPP
 #define INTROPAGE_HPP
 
-#include <QWizardPage>
-
 #include "ui_intropage.h"
+
+#include <QWizard>
 
 namespace Wizard
 {
@@ -13,12 +13,12 @@ namespace Wizard
     {
         Q_OBJECT
     public:
-        IntroPage(QWidget *parent);
+        IntroPage(QWidget* parent);
 
         int nextId() const override;
 
     private:
-        MainWizard *mWizard;
+        MainWizard* mWizard;
     };
 
 }

@@ -1,10 +1,8 @@
 #ifndef OPENMW_COMPONENTS_FONTLOADER_H
 #define OPENMW_COMPONENTS_FONTLOADER_H
 
-#include "boost/filesystem/operations.hpp"
-
-#include <MyGUI_XmlDocument.h>
 #include <MyGUI_Version.h>
+#include <MyGUI_XmlDocument.h>
 
 #include <components/myguiplatform/myguidatamanager.hpp>
 #include <components/to_utf8/to_utf8.hpp>
@@ -27,28 +25,24 @@ namespace Gui
     class FontLoader
     {
     public:
-        FontLoader (ToUTF8::FromType encoding, const VFS::Manager* vfs, const std::string& userDataPath);
-        ~FontLoader();
+        /// @param exportFonts export the converted fonts (Images and XML with glyph metrics) to files?
+        FontLoader(ToUTF8::FromType encoding, const VFS::Manager* vfs, float scalingFactor, bool exportFonts);
 
-        /// @param exportToFile export the converted fonts (Images and XML with glyph metrics) to files?
-        void loadBitmapFonts (bool exportToFile);
-        void loadTrueTypeFonts ();
+        void overrideLineHeight(MyGUI::xml::ElementPtr _node, std::string_view _file, MyGUI::Version _version);
 
-        void loadFontFromXml(MyGUI::xml::ElementPtr _node, const std::string& _file, MyGUI::Version _version);
-
-        int getFontHeight();
+        static std::string_view getFontForFace(std::string_view face);
 
     private:
         ToUTF8::FromType mEncoding;
         const VFS::Manager* mVFS;
-        std::string mUserDataPath;
-        int mFontHeight;
+        float mScalingFactor;
+        bool mExportFonts;
 
-        std::vector<MyGUI::ITexture*> mTextures;
-        std::vector<MyGUI::ResourceManualFont*> mFonts;
+        void loadFonts();
+        void loadFont(const std::string& fontName, const std::string& fontId);
 
-        /// @param exportToFile export the converted font (Image and XML with glyph metrics) to files?
-        void loadBitmapFont (const std::string& fileName, bool exportToFile);
+        void loadBitmapFont(const std::string& fileName, const std::string& fontId);
+        void loadTrueTypeFont(const std::string& fileName, const std::string& fontId);
 
         FontLoader(const FontLoader&);
         void operator=(const FontLoader&);

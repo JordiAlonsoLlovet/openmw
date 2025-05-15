@@ -15,6 +15,7 @@ Programmers
     Nicolay Korslund - Project leader 2008-2010
     scrawl - Top contributor
 
+    AbduSharif
     Adam Hogan (aurix)
     Aesylwinn
     aegis
@@ -27,8 +28,12 @@ Programmers
     Alexander Olofsson (Ananace)
     Alex Rice
     Alex S (docwest)
+    Alexey Yaryshev (skeevert)
     Allofich
+    Andreas Stöckel
     Andrei Kortunov (akortunov)
+    Andrew Appuhamy (andrew-app)
+    Andrzej Głuszak (agluszak)
     AnyOldName3
     Ardekantur
     Armin Preiml
@@ -42,6 +47,7 @@ Programmers
     Austin Salgat (Salgat)
     Ben Shealy (bentsherman)
     Berulacks
+    Bo Svensson
     Britt Mathis (galdor557)
     Capostrophic
     Carl Maxwell
@@ -49,12 +55,16 @@ Programmers
     Cédric Mocquillon
     Chris Boyce (slothlife)
     Chris Robinson (KittyCat)
+    Chris Vigil
+    Cody Glassman (Wazabear)
     Coleman Smith (olcoal)
     Cory F. Cohen (cfcohen)
     Cris Mihalache (Mirceam)
     crussell187
-    DanielVukelich
+    Sam Hellawell (cykoder)
+    Dan Vukelich (sanchezman)
     darkf
+    Dave Corley (S3ctor)
     David Cernat (davidcernat)
     Declan Millar (declan-millar)
     devnexen
@@ -66,16 +76,20 @@ Programmers
     David Teviotdale (dteviot)
     Diggory Hardy
     Dmitry Marakasov (AMDmi3)
+    Duncan Frost (duncans_pumpkin)
     Edmondo Tommasina (edmondo)
     Eduard Cot (trombonecot)
     Eli2
     Emanuel Guével (potatoesmaster)
+    Epoch
+    Eris Caffee (eris)
     eroen
     escondida
     Evgeniy Mineev (sandstranger)
     Federico Guerra (FedeWar)
     Fil Krynicki (filkry)
     Finbar Crago (finbar-crago)
+    Florent Teppe (Tetramir)
     Florian Weber (Florianjw)
     Frédéric Chardon (fr3dz10)
     Gaëtan Dezeiraud (Brouilles)
@@ -85,16 +99,21 @@ Programmers
     gugus/gus
     guidoj
     Haoda Wang (h313)
+    holorat
     hristoast
     Internecine
+    Ivan Beloborodov (myrix)
     Jackerty
     Jacob Essex (Yacoby)
+    Jacob Turnbull (Tankinfrank)
     Jake Westrip (16bitint)
     James Carty (MrTopCat)
+    James Deciutiis (JamesDeciutiis)
     James Moore (moore.work)
     James Stephens (james-h-stephens)
     Jan-Peter Nilsson (peppe)
     Jan Borsodi (am0s)
+    JanuarySnow
     Jason Hooks (jhooks)
     jeaye
     jefetienne
@@ -106,6 +125,7 @@ Programmers
     John Blomberg (fstp)
     Jordan Ayers
     Jordan Milne
+    Josquin Frei
     Josua Grawitter
     Jules Blok (Armada651)
     julianko
@@ -116,6 +136,7 @@ Programmers
     Kurnevsky Evgeny (kurnevsky)
     Lars Söderberg (Lazaroth)
     lazydev
+    Léo Peltier
     Leon Krieg (lkrieg)
     Leon Saunders (emoose)
     logzero
@@ -123,6 +144,8 @@ Programmers
     Lordrea
     Łukasz Gołębiewski (lukago)
     Lukasz Gromanowski (lgro)
+    Mads Sandvei (Foal)
+    Maksim Eremenko (Max Yari)
     Marc Bouvier (CramitDeFrog)
     Marcin Hulist (Gohan)
     Mark Siewert (mark76)
@@ -133,6 +156,7 @@ Programmers
     Mateusz Malisz (malice)
     Max Henzerling (SaintMercury)
     megaton
+    Mehdi Yousfi-Monod (mym)
     Michael Hogan (Xethik)
     Michael Mc Donnell
     Michael Papageorgiou (werdanith)
@@ -144,15 +168,19 @@ Programmers
     Miroslav Puda (pakanek)
     MiroslavR
     Mitchell Schwitzer (schwitzerm)
+    Mitten.O
     naclander
     Narmo
     Nat Meo (Utopium)
     Nathan Jeffords (blunted2night)
     NeveHanter
     Nialsy
+    Nick Crawford (nighthawk469)
     Nikolay Kasyanov (corristo)
+    Noah Gooder
     nobrakal
     Nolan Poe (nopoe)
+    Nurivan Gomez (Nuri-G)
     Oleg Chkan (mrcheko)
     Paul Cercueil (pcercuei)
     Paul McElroy (Greendogo)
@@ -165,8 +193,10 @@ Programmers
     pkubik
     PLkolek
     PlutonicOverkill
+    Qlonever
     Radu-Marius Popovici (rpopovici)
     Rafael Moura (dhustkoder)
+    Randy Davin (Kindi)
     rdimesio
     rexelion
     riothamus
@@ -183,7 +213,9 @@ Programmers
     Sergey Shambir (sergey-shambir)
     sergoz
     ShadowRadiance
+    Shihan42
     Siimacore
+    Simon Meulenbeek (simonmb)
     sir_herrbatka
     smbas
     Sophie Kirschner (pineapplemachine)
@@ -197,26 +229,33 @@ Programmers
     Sylvain Thesnieres (Garvek)
     t6
     terrorfisch
+    Tess (tescoShoppah)
     thegriglat
     Thomas Luppi (Digmaster)
+    Tim Hagberg (hazardMan)
     tlmullis
+    trav
     tri4ng1e
     Thoronador
+    Tobias Tribble (zackhasacat)
+    Tom Lowe (Vulpen)
     Tom Mason (wheybags)
     Torben Leif Carrington (TorbenC)
     unelsson
     uramer
     viadanna
+    Vidi_Aquam
     Vincent Heuken
     Vladimir Panteleev (CyberShadow)
+    vocollapse
     Wang Ryu (bzzt)
     Will Herrmann (Thunderforge)
-    vocollapse
+    Wolfgang Lieff
     xyzz
     Yohaulticetl
     Yuri Krupenin
+    Yury Stepovikov
     zelurker
-    Noah Gooder
 
 Documentation
 -------------
@@ -231,6 +270,7 @@ Documentation
     Joakim Berg (lysol90)
     Ryan Tucker (Ravenwing)
     sir_herrbatka
+    David Nagy (zuzaman)
 
 Packagers
 ---------

@@ -1,23 +1,38 @@
+#include "windows_crashcatcher.hpp"
+
 #include <cassert>
 #include <cwchar>
-#include <iostream>
 #include <sstream>
 #include <thread>
 
-#include "windows_crashcatcher.hpp"
 #include "windows_crashmonitor.hpp"
 #include "windows_crashshm.hpp"
+#include "windowscrashdumppathhelpers.hpp"
 #include <SDL_messagebox.h>
+
+#include <components/misc/strings/conversion.hpp>
 
 namespace Crash
 {
+    namespace
+    {
+        template <class T, std::size_t N>
+        void writePathToShm(T (&buffer)[N], const std::filesystem::path& path)
+        {
+            memset(buffer, 0, sizeof(buffer));
+            const auto str = path.u8string();
+            size_t length = str.length();
+            if (length >= sizeof(buffer))
+                length = sizeof(buffer) - 1;
+            strncpy_s(buffer, sizeof(buffer), Misc::StringUtils::u8StringToString(str).c_str(), length);
+        }
+    }
 
     HANDLE duplicateHandle(HANDLE handle)
     {
         HANDLE duplicate;
-        if (!DuplicateHandle(GetCurrentProcess(), handle,
-                             GetCurrentProcess(), &duplicate,
-                             0, TRUE, DUPLICATE_SAME_ACCESS))
+        if (!DuplicateHandle(
+                GetCurrentProcess(), handle, GetCurrentProcess(), &duplicate, 0, TRUE, DUPLICATE_SAME_ACCESS))
         {
             throw std::runtime_error("Crash monitor could not duplicate handle");
         }
@@ -26,14 +41,15 @@ namespace Crash
 
     CrashCatcher* CrashCatcher::sInstance = nullptr;
 
-    CrashCatcher::CrashCatcher(int argc, char **argv, const std::string& crashLogPath)
+    CrashCatcher::CrashCatcher(int argc, char** argv, const std::filesystem::path& dumpPath,
+        const std::filesystem::path& crashDumpName, const std::filesystem::path& freezeDumpName)
     {
         assert(sInstance == nullptr); // don't allow two instances
 
         sInstance = this;
 
         HANDLE shmHandle = nullptr;
-        for (int i=0; i<argc; ++i)
+        for (int i = 0; i < argc; ++i)
         {
             if (strcmp(argv[i], "--crash-monitor"))
                 continue;
@@ -48,7 +64,7 @@ namespace Crash
         if (!shmHandle)
         {
             setupIpc();
-            startMonitorProcess(crashLogPath);
+            startMonitorProcess(dumpPath, crashDumpName, freezeDumpName);
             installHandler();
         }
         else
@@ -75,6 +91,26 @@ namespace Crash
             CloseHandle(mShmHandle);
     }
 
+    void CrashCatcher::updateDumpPath(const std::filesystem::path& dumpPath)
+    {
+        shmLock();
+
+        writePathToShm(mShm->mStartup.mDumpDirectoryPath, dumpPath);
+
+        shmUnlock();
+    }
+
+    void CrashCatcher::updateDumpNames(
+        const std::filesystem::path& crashDumpName, const std::filesystem::path& freezeDumpName)
+    {
+        shmLock();
+
+        writePathToShm(mShm->mStartup.mCrashDumpFileName, crashDumpName);
+        writePathToShm(mShm->mStartup.mFreezeDumpFileName, freezeDumpName);
+
+        shmUnlock();
+    }
+
     void CrashCatcher::setupIpc()
     {
         SECURITY_ATTRIBUTES attributes;
@@ -84,7 +120,8 @@ namespace Crash
         mSignalAppEvent = CreateEventW(&attributes, FALSE, FALSE, NULL);
         mSignalMonitorEvent = CreateEventW(&attributes, FALSE, FALSE, NULL);
 
-        mShmHandle = CreateFileMappingW(INVALID_HANDLE_VALUE, &attributes, PAGE_READWRITE, HIWORD(sizeof(CrashSHM)), LOWORD(sizeof(CrashSHM)), NULL);
+        mShmHandle = CreateFileMappingW(INVALID_HANDLE_VALUE, &attributes, PAGE_READWRITE, HIWORD(sizeof(CrashSHM)),
+            LOWORD(sizeof(CrashSHM)), NULL);
         if (mShmHandle == nullptr)
             throw std::runtime_error("Failed to allocate crash catcher shared memory");
 
@@ -124,26 +161,27 @@ namespace Crash
         SetUnhandledExceptionFilter(vectoredExceptionHandler);
     }
 
-    void CrashCatcher::startMonitorProcess(const std::string& crashLogPath)
+    void CrashCatcher::startMonitorProcess(const std::filesystem::path& dumpPath,
+        const std::filesystem::path& crashDumpName, const std::filesystem::path& freezeDumpName)
     {
         std::wstring executablePath;
         DWORD copied = 0;
-        do {
+        do
+        {
             executablePath.resize(executablePath.size() + MAX_PATH);
-            copied = GetModuleFileNameW(nullptr, executablePath.data(), executablePath.size());
+            copied = GetModuleFileNameW(nullptr, executablePath.data(), static_cast<DWORD>(executablePath.size()));
         } while (copied >= executablePath.size());
         executablePath.resize(copied);
 
-        memset(mShm->mStartup.mLogFilePath, 0, sizeof(mShm->mStartup.mLogFilePath));
-        int length = crashLogPath.length();
-        if (length > MAX_LONG_PATH) length = MAX_LONG_PATH;
-        strncpy(mShm->mStartup.mLogFilePath, crashLogPath.c_str(), length);
-        mShm->mStartup.mLogFilePath[length] = '\0';
+        writePathToShm(mShm->mStartup.mDumpDirectoryPath, dumpPath);
+        writePathToShm(mShm->mStartup.mCrashDumpFileName, crashDumpName);
+        writePathToShm(mShm->mStartup.mFreezeDumpFileName, freezeDumpName);
 
         // note that we don't need to lock the SHM here, the other process has not started yet
         mShm->mEvent = CrashSHM::Event::Startup;
         mShm->mStartup.mShmMutex = duplicateHandle(mShmMutex);
         mShm->mStartup.mAppProcessHandle = duplicateHandle(GetCurrentProcess());
+        mShm->mStartup.mAppMainThreadId = GetThreadId(GetCurrentThread());
         mShm->mStartup.mSignalApp = duplicateHandle(mSignalAppEvent);
         mShm->mStartup.mSignalMonitor = duplicateHandle(mSignalMonitorEvent);
 
@@ -160,6 +198,9 @@ namespace Crash
         if (!CreateProcessW(executablePath.data(), arguments.data(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
             throw std::runtime_error("Could not start crash monitor process");
 
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
         waitMonitor();
     }
 
@@ -167,10 +208,10 @@ namespace Crash
     {
         switch (info->ExceptionRecord->ExceptionCode)
         {
-        case EXCEPTION_SINGLE_STEP:
-        case EXCEPTION_BREAKPOINT:
-        case DBG_PRINTEXCEPTION_C:
-            return EXCEPTION_EXECUTE_HANDLER;
+            case EXCEPTION_SINGLE_STEP:
+            case EXCEPTION_BREAKPOINT:
+            case DBG_PRINTEXCEPTION_C:
+                return EXCEPTION_EXECUTE_HANDLER;
         }
         if (!sInstance)
             return EXCEPTION_EXECUTE_HANDLER;
@@ -178,8 +219,6 @@ namespace Crash
         sInstance->handleVectoredException(info);
 
         _Exit(1);
-
-        return EXCEPTION_CONTINUE_SEARCH;
     }
 
     void CrashCatcher::handleVectoredException(PEXCEPTION_POINTERS info)
@@ -198,7 +237,9 @@ namespace Crash
         // must remain until monitor has finished
         waitMonitor();
 
-        std::string message = "OpenMW has encountered a fatal error.\nCrash log saved to '" + std::string(mShm->mStartup.mLogFilePath) + "'.\n Please report this to https://gitlab.com/OpenMW/openmw/issues !";
+        std::string message = "OpenMW has encountered a fatal error.\nCrash dump saved to '"
+            + Misc::StringUtils::u8StringToString(getCrashDumpPath(*mShm).u8string())
+            + "'.\nPlease report this to https://gitlab.com/OpenMW/openmw/issues !";
         SDL_ShowSimpleMessageBox(0, "Fatal Error", message.c_str(), nullptr);
     }
 

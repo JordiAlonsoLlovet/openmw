@@ -1,15 +1,14 @@
 #ifndef GRAPHICSPAGE_H
 #define GRAPHICSPAGE_H
 
-#include <QWidget>
-
 #include "ui_graphicspage.h"
 
-#include <components/settings/settings.hpp>
+#include <components/settings/windowmode.hpp>
 
-#include "sdlinit.hpp"
-
-namespace Files { struct ConfigurationManager; }
+namespace Files
+{
+    struct ConfigurationManager;
+}
 
 namespace Launcher
 {
@@ -20,7 +19,7 @@ namespace Launcher
         Q_OBJECT
 
     public:
-        GraphicsPage(Settings::Manager &engineSettings, QWidget *parent = nullptr);
+        explicit GraphicsPage(QWidget* parent = nullptr);
 
         void saveSettings();
         bool loadSettings();
@@ -32,17 +31,15 @@ namespace Launcher
         void slotFullScreenChanged(int state);
         void slotStandardToggled(bool checked);
         void slotFramerateLimitToggled(bool checked);
-        void slotShadowDistLimitToggled(bool checked);
 
     private:
-        Settings::Manager &mEngineSettings;
-
         QVector<QStringList> mResolutionsPerScreen;
 
         static QStringList getAvailableResolutions(int screen);
         static QRect getMaximumResolution();
 
         bool setupSDL();
+        void handleWindowModeChange(Settings::WindowMode state);
     };
 }
 #endif

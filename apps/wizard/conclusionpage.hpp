@@ -1,8 +1,6 @@
 #ifndef CONCLUSIONPAGE_HPP
 #define CONCLUSIONPAGE_HPP
 
-#include <QWizardPage>
-
 #include "ui_conclusionpage.h"
 
 namespace Wizard
@@ -13,16 +11,15 @@ namespace Wizard
     {
         Q_OBJECT
     public:
-        ConclusionPage(QWidget *parent);
+        ConclusionPage(QWidget* parent);
 
         int nextId() const override;
 
     private:
-        MainWizard *mWizard;
+        MainWizard* mWizard;
 
     protected:
         void initializePage() override;
-
     };
 
 }

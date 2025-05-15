@@ -7,6 +7,7 @@
 
 namespace osg
 {
+    class Geometry;
     class Group;
     class PositionAttitudeTransform;
 }
@@ -27,14 +28,12 @@ namespace CSVRender
     class CellBorder
     {
     public:
-
         CellBorder(osg::Group* cellNode, const CSMWorld::CellCoordinates& coords);
         ~CellBorder();
 
         void buildShape(const ESM::Land& esmLand);
 
     private:
-
         static const int CellSize;
         static const int VertexCount;
 
@@ -47,7 +46,7 @@ namespace CSVRender
 
         osg::Group* mParentNode;
         osg::ref_ptr<osg::PositionAttitudeTransform> mBaseNode;
-
+        osg::ref_ptr<osg::Geometry> mBorderGeometry;
     };
 }
 

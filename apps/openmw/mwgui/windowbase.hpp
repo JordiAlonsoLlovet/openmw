@@ -3,11 +3,6 @@
 
 #include "layout.hpp"
 
-namespace MWBase
-{
-    class WindowManager;
-}
-
 namespace MWWorld
 {
     class Ptr;
@@ -15,18 +10,17 @@ namespace MWWorld
 
 namespace MWGui
 {
-    class WindowManager;
     class DragAndDrop;
 
-    class WindowBase: public Layout
+    class WindowBase : public Layout
     {
     public:
-        WindowBase(const std::string& parLayout);
+        WindowBase(std::string_view parLayout);
 
         virtual MyGUI::Widget* getDefaultKeyFocus() { return nullptr; }
 
         // Events
-        typedef MyGUI::delegates::CMultiDelegate1<WindowBase*> EventHandle_WindowBase;
+        typedef MyGUI::delegates::MultiDelegate<WindowBase*> EventHandle_WindowBase;
 
         /// Open this object in the GUI, for windows that support it
         virtual void setPtr(const MWWorld::Ptr& ptr) {}
@@ -37,13 +31,13 @@ namespace MWGui
         /// Notify that window has been made visible
         virtual void onOpen() {}
         /// Notify that window has been hidden
-        virtual void onClose () {}
+        virtual void onClose() {}
         /// Gracefully exits the window
-        virtual bool exit() {return true;}
+        virtual bool exit() { return true; }
         /// Sets the visibility of the window
         void setVisible(bool visible) override;
         /// Returns the visibility state of the window
-        bool isVisible();
+        bool isVisible() const;
 
         void center();
 
@@ -53,11 +47,20 @@ namespace MWGui
         /// Called when GUI viewport changes size
         virtual void onResChange(int width, int height) {}
 
+        virtual void onDeleteCustomData(const MWWorld::Ptr& ptr) {}
+
+        virtual std::string_view getWindowIdForLua() const { return ""; }
+        void setDisabledByLua(bool disabled) { mDisabledByLua = disabled; }
+
+        static void clampWindowCoordinates(MyGUI::Window* window);
+
     protected:
         virtual void onTitleDoubleClicked();
 
     private:
         void onDoubleClick(MyGUI::Widget* _sender);
+
+        bool mDisabledByLua = false;
     };
 
     /*
@@ -69,7 +72,7 @@ namespace MWGui
         WindowModal(const std::string& parLayout);
         void onOpen() override;
         void onClose() override;
-        bool exit() override {return true;}
+        bool exit() override { return true; }
     };
 
     /// A window that cannot be the target of a drag&drop action.
@@ -92,10 +95,10 @@ namespace MWGui
     class BookWindowBase : public WindowBase
     {
     public:
-        BookWindowBase(const std::string& parLayout);
+        BookWindowBase(std::string_view parLayout);
 
     protected:
-        float adjustButton (char const * name);
+        float adjustButton(std::string_view name);
     };
 }
 
